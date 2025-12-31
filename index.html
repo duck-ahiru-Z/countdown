@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Year End Countdown</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* 全体の色設定 */
+            --bg-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            --card-bg: rgba(255, 255, 255, 0.85); /* ガラス風の半透明白 */
+            --text-main: #2d3436;
+            --text-sub: #636e72;
+            --accent-color: #00cec9;
+            --duck-yellow: #f1c40f;
+            --duck-beak: #e67e22;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            overflow: hidden; /* 余計なスクロールを防ぐ */
+        }
+
+        /* --- カードデザイン（アプリの画面のような枠） --- */
+        .card {
+            background: var(--card-bg);
+            padding: 3rem;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            backdrop-filter: blur(10px); /* すりガラス効果 */
+            max-width: 600px;
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
+
+        /* --- CSS Art Duck (図形で描くモダンなアヒル) --- */
+        .duck-wrapper {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin-bottom: 20px;
+            /* ふわふわ浮くアニメーション */
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* アヒルの体 */
+        .duck-body {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            width: 100px;
+            height: 60px;
+            background: var(--duck-yellow);
+            border-radius: 0 0 50px 50px; /* 下半分を丸く */
+        }
+        /* アヒルの尻尾 */
+        .duck-body::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            right: -5px;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 5px solid transparent;
+            border-bottom: 20px solid var(--duck-yellow);
+            transform: rotate(20deg);
+        }
+
+        /* アヒルの頭 */
+        .duck-head {
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            background: var(--duck-yellow);
+            border-radius: 50%;
+        }
+
+        /* アヒルの目 */
+        .duck-eye {
+            position: absolute;
+            top: 25px;
+            left: 55px;
+            width: 8px;
+            height: 8px;
+            background: #2d3436;
+            border-radius: 50%;
+            z-index: 2;
+        }
+        /* 目のハイライト（キラキラ） */
+        .duck-eye::after {
+            content: '';
+            position: absolute;
+            top: 1px;
+            right: 2px;
+            width: 3px;
+            height: 3px;
+            background: #fff;
+            border-radius: 50%;
+        }
+
+        /* アヒルのくちばし */
+        .duck-beak {
+            position: absolute;
+            top: 35px;
+            left: 70px;
+            width: 25px;
+            height: 14px;
+            background: var(--duck-beak);
+            border-radius: 4px 10px 10px 4px;
+            z-index: 1;
+        }
+
+        /* 浮遊アニメーションの定義 */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* タイトル文字 */
+        h1 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-sub);
+            margin: 0 0 1rem 0;
+            font-weight: 700;
+        }
+
+        /* タイマー表示エリア */
+        #timer-display {
+            font-family: 'JetBrains Mono', monospace; /* 等幅フォントで数字がズレない */
+            font-size: 3rem;
+            font-weight: 500;
+            margin: 1rem 0 2rem 0;
+            min-height: 80px;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            flex-wrap: wrap;
+            line-height: 1.2;
+        }
+
+        /* 単位（days, hours...）のスタイル */
+        .unit {
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            color: var(--text-sub);
+            margin: 0 12px 0 4px;
+            font-weight: 400;
+        }
+
+        /* ハッピーニューイヤー時のスタイル */
+        .celebrate-text {
+            color: #e17055; /* お祝いっぽい赤オレンジ */
+            font-size: 2.5rem;
+            font-weight: bold;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* 操作パネル（ボタン群） */
+        .controls {
+            display: inline-flex;
+            background: #dfe6e9;
+            padding: 4px;
+            border-radius: 12px;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* ボタン単体 */
+        button {
+            background: transparent;
+            color: var(--text-sub);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            color: var(--text-main);
+            background: rgba(255,255,255,0.5);
+        }
+
+        /* 選択中のボタン */
+        button.active {
+            background: #fff;
+            color: var(--accent-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* スマホ向けの調整 */
+        @media (max-width: 600px) {
+            .card {
+                padding: 2rem 1rem;
+                width: 95%;
+            }
+            #timer-display {
+                font-size: 1.8rem; /* 少し小さくして折り返しを防ぐ */
+                flex-direction: column; /* 縦並びを許可 */
+                gap: 5px;
+            }
+            .controls {
+                width: 100%;
+                display: flex;
+            }
+            button {
+                flex: 1; /* ボタンを均等配置 */
+                font-size: 0.75rem;
+                padding: 10px 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="duck-wrapper">
+            <div class="duck-head"></div>
+            <div class="duck-eye"></div>
+            <div class="duck-beak"></div>
+            <div class="duck-body"></div>
+        </div>
+
+        <h1 id="header-title">Time Until Next Year</h1>
+
+        <div id="timer-display">
+            Loading...
+        </div>
+
+        <div class="controls">
+            <button onclick="setMode('mixed')" id="btn-mixed" class="active">All</button>
+            <button onclick="setMode('days')" id="btn-days">Days</button>
+            <button onclick="setMode('hours')" id="btn-hours">Hours</button>
+            <button onclick="setMode('minutes')" id="btn-minutes">Mins</button>
+            <button onclick="setMode('seconds')" id="btn-seconds">Secs</button>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'mixed'; 
+
+        function updateTimer() {
+            const now = new Date();
+            
+            // --- お正月特別モード判定 ---
+            // 1月(getMonth()は0から始まる)の1日ならお祝いメッセージ
+            if (now.getMonth() === 0 && now.getDate() === 1) {
+                const display = document.getElementById('timer-display');
+                // チラつき防止のため、内容が違うときだけ書き換え
+                if (display.innerText !== "HAPPY NEW YEAR!") {
+                    display.innerHTML = "<span class='celebrate-text'>HAPPY NEW YEAR!</span>";
+                    document.getElementById('header-title').innerText = "Welcome " + now.getFullYear();
+                }
+                return;
+            }
+
+            // --- 通常カウントダウンモード ---
+            const currentYear = now.getFullYear();
+            // 今年のヘッダーに戻す（1月2日以降など）
+            document.getElementById('header-title').innerText = "Time Until " + (currentYear + 1);
+
+            // 次の年の1月1日 00:00:00 をターゲットにする
+            const nextYear = new Date(currentYear + 1, 0, 1, 0, 0, 0);
+            const diff = nextYear - now;
+
+            // HTML生成
+            let html = '';
+            const msPerSec = 1000;
+            const msPerMin = 60 * 1000;
+            const msPerHour = 60 * 60 * 1000;
+            const msPerDay = 24 * 60 * 60 * 1000;
+
+            // 数字を2桁で埋める関数 (例: 5 -> 05)
+            const fmt = (num) => String(num).padStart(2, '0');
+
+            switch (currentMode) {
+                case 'mixed':
+                    const d = Math.floor(diff / msPerDay);
+                    const h = Math.floor((diff % msPerDay) / msPerHour);
+                    const m = Math.floor((diff % msPerHour) / msPerMin);
+                    const s = Math.floor((diff % msPerMin) / msPerSec);
+                    const ms = Math.floor((diff % msPerSec) / 10); // ミリ秒(2桁)
+                    
+                    if(d > 0) {
+                        // 日数があるとき
+                        html = `${d}<span class="unit">days</span> ${fmt(h)}<span class="unit">h</span> ${fmt(m)}<span class="unit">m</span> ${fmt(s)}<span class="unit">s</span>`;
+                    } else {
+                        // 最終日（残り24時間以下）はミリ秒を表示して緊迫感を出す
+                        html = `${fmt(h)}<span class="unit">h</span> ${fmt(m)}<span class="unit">m</span> ${fmt(s)}<span class="unit">s</span> <small style="font-size:1.5rem; opacity:0.5;">.${fmt(ms)}</small>`;
+                    }
+                    break;
+
+                case 'days':
+                    // 小数点第5位まで表示して動きを見せる
+                    html = `${(diff / msPerDay).toFixed(5)}<span class="unit">days</span>`;
+                    break;
+
+                case 'hours':
+                    html = `${addCommas((diff / msPerHour).toFixed(4))}<span class="unit">hours</span>`;
+                    break;
+
+                case 'minutes':
+                    html = `${addCommas((diff / msPerMin).toFixed(3))}<span class="unit">mins</span>`;
+                    break;
+
+                case 'seconds':
+                    html = `${addCommas((diff / msPerSec).toFixed(1))}<span class="unit">secs</span>`;
+                    break;
+            }
+
+            document.getElementById('timer-display').innerHTML = html;
+        }
+
+        // カンマ区切りにする関数
+        function addCommas(numStr) {
+            const parts = numStr.toString().split(".");
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            return parts.join(".");
+        }
+
+        // モード切替
+        function setMode(mode) {
+            currentMode = mode;
+            // ボタンの見た目更新
+            document.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`btn-${mode}`).classList.add('active');
+            // 即時更新
+            updateTimer();
+        }
+
+        // 30msごとに更新（滑らかさ重視）
+        setInterval(updateTimer, 30);
+        updateTimer();
+    </script>
+</body>
+</html>
